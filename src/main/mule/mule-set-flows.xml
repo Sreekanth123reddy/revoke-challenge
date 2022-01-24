@@ -84,4 +84,48 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 		</scheduler>
 		<http:request method="GET" doc:name="Request" doc:id="adac6e89-1e0d-42a2-88ce-fb392a54edb9" config-ref="HTTP_Request_configuration1" path="/webservicesserver/numberconversion.wso?WSDL" />
 	</flow>
+	<flow name="mule-set-flowsFlow6" doc:id="a47caf43-6c2f-480c-8b6e-87277317bb52" initialState="stopped">
+		<scheduler doc:name="Scheduler" doc:id="c985d989-edd5-49ea-8ff2-ed31487c7520" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="10" timeUnit="SECONDS"/>
+			</scheduling-strategy>
+		</scheduler>
+		<ee:transform doc:name="Transform Message" doc:id="ee508ceb-a807-4b25-bae4-3c573a415a47" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+[
+	{
+		"size":"large",
+		"amount": 1000,
+		"price": 400.00
+	},
+	{
+		"size":"medium",
+		"amount": 400,
+		"price": 600.00
+	},
+	{
+		"size":"small",
+		"amount": 1,
+		"price": 800.00
+	}
+]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<batch:job jobName="mule-set-flowsBatch_Job1" doc:id="569c42ac-3ebd-4329-b5aa-3c65324dee34" >
+			<batch:process-records >
+				<batch:step name="Batch_Step1" doc:id="0e121f46-e273-47e4-86d8-32186eded5cf" acceptExpression="#[payload.amount &lt; 500]">
+					<set-payload value="#[{'amount': payload.amount + 100}]" doc:name="Set Payload" doc:id="d9d81364-aa8c-4f8d-942a-bdd2761aae5b" />
+					<logger level="INFO" doc:name="Logger" doc:id="4ee68420-16c9-4685-a202-a2e2a85acea5" message="#[payload]"/>
+				</batch:step>
+				<batch:step name="Batch_Step2" doc:id="e416a467-be41-4681-a8a6-669e94f37ad9" acceptExpression="#[payload.amount &gt; 200]">
+					<set-payload value="#[{step2amount: payload.amount}]" doc:name="Set Payload" doc:id="a1ed0057-9570-4c45-b808-1190ae29ce0e" />
+					<logger level="INFO" doc:name="Logger" doc:id="18fa00be-3af8-4c17-a13d-5de5094d81b1" message="#[payload]"/>
+				</batch:step>
+			</batch:process-records>
+		</batch:job>
+	</flow>
+	
 </mule>
