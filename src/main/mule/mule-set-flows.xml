@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
+	xmlns:sockets="http://www.mulesoft.org/schema/mule/sockets"
+	xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/sockets http://www.mulesoft.org/schema/mule/sockets/current/mule-sockets.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="4cec4f24-3453-41e8-a7ff-e200b9c7e4fb" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<validation:config name="Validation_Config" doc:name="Validation Config" doc:id="0862061c-6709-4598-a3f6-aa247072d3c7" />
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="919c0b23-88c8-4946-bbb4-66766bed479d" >
+		<http:request-connection host="localhost" port="8081" >
+			<reconnection >
+				<reconnect-forever />
+			</reconnection>
+		</http:request-connection>
+	</http:request-config>
+	<http:request-config name="HTTP_Request_configuration1" doc:name="HTTP Request configuration" doc:id="a3ce7d0c-397e-4f4f-a86c-7a950383ac5d" >
+		<http:request-connection host="www.dataaccess.com" />
+	</http:request-config>
+	<flow name="mule-set-flowsFlow" doc:id="ac380975-069d-47fe-81d7-f5ac619c46e1" >
+		<http:listener doc:name="Listener" doc:id="5ee81c18-1038-4d45-b542-585f009d0d3e" config-ref="HTTP_Listener_config" path="/demo" allowedMethods="GET"/>
+		<set-payload value='#["Start"]' doc:name="Start" doc:id="050816df-bf28-4a91-9550-fcb9722f17d1" />
+		<set-variable value="0" doc:name="count=0" doc:id="09187bc9-cbf7-40b5-9997-6b461cb9d07e" variableName="count"/>
+		<set-payload value='#["Processing"]' doc:name="processing " doc:id="8b7fb36e-e194-45d5-8392-1eda7f9230b1" />
+		<set-variable value="1" doc:name="count=1" doc:id="5054a079-d8a3-400e-a5af-4114f2757d7f" variableName="count"/>
+		<set-payload value='#["complete"]' doc:name="complete" doc:id="1d9cdfc3-87a8-4658-8bfa-9c12222f94b8" />
+	</flow>
+	<flow name="mule-set-flowsFlow1" doc:id="25038516-1d71-491b-91b2-4f4d4fdf08e0" initialState="stopped">
+		<scheduler doc:name="Scheduler" doc:id="460da7b6-0e0f-4557-9e7a-61ea048ac476" >
+			<scheduling-strategy >
+				<fixed-frequency />
+			</scheduling-strategy>
+		</scheduler>
+		<set-payload value="#[['a','b','c']]" doc:name="['a','b','c']" doc:id="bb6e13e8-1df4-4f52-b8b9-d8102ce10e73" />
+		<batch:job jobName="mule-set-flowsBatch_Job" doc:id="50cf0bc9-ebc5-4d72-a674-4834e5a8c592" >
+			<batch:process-records >
+				<batch:step name="Batch_Step" doc:id="676f4872-cdcb-40c5-8e85-484e92e761c5" >
+					<set-payload value="#[upper(payload)]" doc:name="Set Payload" doc:id="83fd1fa2-f3a4-449b-8f2e-1f234810f5a4" />
+				</batch:step>
+			</batch:process-records>
+			<batch:on-complete >
+				<logger level="INFO" doc:name="Logger" doc:id="3db9a39e-044c-4fce-a6c9-7f960a9e14ec" message="Result: #[payload]"/>
+			</batch:on-complete>
+		</batch:job>
+	</flow>
+	<flow name="mule-set-flowsFlow2" doc:id="d53164b4-b783-4eb3-8269-8f6a65c81673" initialState="stopped">
+		<scheduler doc:name="Scheduler" doc:id="30cd390a-6813-4f8a-8350-81a59f792b44" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="30" timeUnit="SECONDS"/>
+			</scheduling-strategy>
+		</scheduler>
+		<set-variable value='#[{first:"Max", last:"Mule"}]' doc:name="Set Variable" doc:id="c9e228d4-ed84-4d30-bf65-2365b70cc33c" variableName="customer"/>
+		<logger level="INFO" doc:name="Logger" doc:id="6972aabd-f4bb-488e-bdb0-a9a3770f35a8" message='#[vars."customer"."first"]'/>
+	</flow>
+	<flow name="mule-set-flowsFlow3" doc:id="a80c63b6-fbb2-4753-8846-45b928d642cc" >
+		<http:listener doc:name="Listener" doc:id="ed88691e-d697-4dcb-b84f-7cc0591f1d97" config-ref="HTTP_Listener_config" path="/start"/>
+		<set-payload value='#["Start"]' doc:name="Set Payload" doc:id="cd6e92da-9bae-43fb-a8cf-8c90d23f37f8" />
+		<validation:is-blank-string doc:name="Is blank string" doc:id="8fe53276-1958-4832-8faa-05efda7ac5c5" config-ref="Validation_Config" value="payload"/>
+		<set-payload value='#["End"]' doc:name="Set Payload" doc:id="00082797-669e-4f1e-9011-5c478933f369" />
+	</flow>
+	<flow name="mule-set-flowsFlow4" doc:id="a2ac3b7f-5cda-42cb-851c-d7c1f034bcbf" initialState="stopped">
+		<scheduler doc:name="Scheduler" doc:id="77b71dbb-8b12-44f2-8b0e-31d24e352606" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="10" timeUnit="SECONDS"/>
+			</scheduling-strategy>
+		</scheduler>
+		<set-payload value='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;	oid: 123,&#10;	qty: 5,&#10;	description: "Jet Skies"&#10;}]' doc:name="Set Payload" doc:id="a3ae9b0d-0177-4cc3-aa2a-5933f1c6de09" />
+		<http:request method="POST" doc:name="Request" doc:id="c536ab17-6e1f-4d60-89c7-d282eb9fe545" config-ref="HTTP_Request_configuration" path="/fastShipping"/>
+	</flow>
+	<flow name="mule-set-flowsFlow5" doc:id="b6c5fdcc-1b4a-4644-9028-0994c0b9940e" >
+		<http:listener doc:name="Listener" doc:id="3bfd6403-0b1b-4d55-9516-a1944557790f" config-ref="HTTP_Listener_config" path="fastShipping"/>
+		<logger level="INFO" doc:name="Logger" doc:id="9866b7f3-2257-4d14-90ff-3454bfe4f19c" message="Request Received"/>
+	</flow>
+		<flow name="mule-set-flowsFlow9" doc:id="df242f6e-b606-4550-a655-06ac74b953d0" >
+		<scheduler doc:name="Scheduler" doc:id="d475d769-c3b2-4f14-810c-169156d353df" >
+			<scheduling-strategy >
+				<fixed-frequency />
+			</scheduling-strategy>
+		</scheduler>
+		<http:request method="GET" doc:name="Request" doc:id="adac6e89-1e0d-42a2-88ce-fb392a54edb9" config-ref="HTTP_Request_configuration1" path="/webservicesserver/numberconversion.wso?WSDL" />
+	</flow>
+</mule>

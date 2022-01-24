@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+	<file:config name="File_Config" doc:name="File Config" doc:id="b307f1a2-3cec-47da-80fa-3fedc965424a" />
+	<flow name="error-handlingFlow" doc:id="8445ba69-d691-4b1a-87cb-7b80251ce609" >
+		<http:listener doc:name="Listener" doc:id="00ae0861-1853-4bf9-8bb9-6ee360c6d903" config-ref="HTTP_Listener_config" path="/errorDemo" allowedMethods="POST"/>
+		<try doc:name="Try" doc:id="4acd1207-751f-4b31-aae1-9dd7dfd06c7b" >
+			<validation:is-null doc:name="Is null" doc:id="735b34e6-22db-4019-944a-139f66c54a4f" config-ref="Validation_Config" value="#[payload]"/>
+			<error-handler>
+				<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="05e580f0-c514-46c4-815a-a49d596dc97b" >
+					<set-payload value="Error Try Scope" doc:name="Error Try Scope" doc:id="7e7dbd6d-6f40-407d-a7a5-945e8f236e76" />
+				</on-error-propagate>
+			</error-handler>
+		</try>
+		<set-payload value="Success main flow" doc:name="Success main flow" doc:id="d5600599-832c-4b74-8088-c91808687069" />
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="84a73530-7ebc-4845-861e-c2fdfa5081ff" >
+				<set-payload value="Error in main flow" doc:name="Error in main flow" doc:id="267f1830-b53a-4d45-a368-f6c85d120cfb" />
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+	<flow name="error-handlingFlow1" doc:id="a6bc2d5b-8ba5-4ed5-8375-cc2478ae5b10" >
+		<http:listener doc:name="Listener" doc:id="a0213564-2c39-4ee6-87e1-ee44e24cebd1" config-ref="HTTP_Listener_config" path="/errorDemo2"/>
+		<flow-ref doc:name="private" doc:id="2297fc19-b342-406a-9154-0e3cbd80a3df" name="error-handlingFlow2"/>
+		<set-payload value="Parent Completed" doc:name="Set Payload" doc:id="94e11439-aff2-46ad-81f1-606aa558e4b3" />
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="e9211df9-9571-46b3-993b-856509590e6e" >
+				<set-payload value="Parent error" doc:name="Parent error" doc:id="0e11ed81-2f44-4ecf-b820-cf83ef2e81c6" />
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+	<flow name="error-handlingFlow2" doc:id="080ee7c2-aa8a-4c0f-b2a4-6eda8a57662e" >
+		<validation:is-number doc:name="Is number" doc:id="41954d74-a4e1-4b06-b2c6-ce102868ee07" config-ref="Validation_Config" value="#[payload]" numberType="INTEGER" message="Validation error"/>
+		<error-handler>
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="796ab084-7882-4342-9816-e2ddfcb353bd" >
+				<set-payload value="Child Error" doc:name="Set Payload" doc:id="5dfb97aa-e9eb-4ff5-b3cc-8f465eef87c2" />
+			</on-error-continue>
+		</error-handler>
+	</flow>
+	<flow name="error-handlingFlow3" doc:id="09a50fdf-3f24-4810-b989-38d1edacee10" >
+		<http:listener doc:name="Listener" doc:id="4d5f0741-e1fb-4525-a199-aa465fba621f" config-ref="HTTP_Listener_config" path="order" allowedMethods="POST">
+			<ee:repeatable-file-store-stream bufferUnit="BYTE" />
+			<reconnect />
+			<http:error-response >
+				<http:body ><![CDATA[#[output text/plain --- payload]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<file:write doc:name="Write" doc:id="d049bec5-b61f-4d73-a720-cf0220af542a" config-ref="File_Config" path="newOrder.json"/>
+		<set-payload value="file written" doc:name="Set Payload" doc:id="660eb79b-a66a-40c8-b47b-a4a86a79f6f9" />
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="d9d62330-b62e-459f-a5a0-2ad86a102258" type="FILE:CONNECTIVITY">
+				<set-payload value="file connectivity" doc:name="Set Payload" doc:id="12f3db36-accd-49b7-85ce-8232578062f8" />
+			</on-error-continue>
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="5da55e9b-3f3f-4b0e-916b-5d326f6a872c" type="ANY">
+				<set-payload value="other Error" doc:name="Set Payload" doc:id="bafe784f-973e-4936-9ffa-b0bd78c1fd02" />
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+</mule>
